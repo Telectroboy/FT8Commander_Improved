@@ -8,6 +8,7 @@ import geo
 from decode_normalizer import normalize_message_segments
 from dbutils import create_db
 from ft8ctrl import Sequencer, V60_LOCATOR_TIMEOUT_HOTFIX
+from v1076_terminal_revisit import _terminal_from_packet
 from v60_runtime import V60_PURSUIT_WAIT_HOLD_HOTFIX
 
 
@@ -54,6 +55,24 @@ class TestV60LocatorPursuitWaitV4(unittest.TestCase):
         self.assertEqual(second['to'], 'JA1MLV')
         self.assertEqual(second['call'], 'CN8NS')
         self.assertEqual(second['payload'], ['-08'])
+
+    def test_mshv_terminal_reaches_v1076_terminal_watch(self):
+        seq = Sequencer.__new__(Sequencer)
+        seq.mycall = 'F4EGM'
+        seq.current = {'call': 'CN8NS'}
+        seq.band = 20
+        seq.frequency = 14074000
+        packet = SimpleNamespace(
+            Message='F4EGM RR73; JA1MLV <CN8NS> -08',
+            Time=123456,
+            SNR=-8,
+        )
+
+        token, data = _terminal_from_packet(seq, packet, 'CN8NS')
+
+        self.assertEqual(token, 'RR73')
+        self.assertEqual(data['call'], 'CN8NS')
+        self.assertEqual(data['source'], 'terminal-73-retry')
 
     def test_cq_rr73_can_still_be_a_locator(self):
         seq = Sequencer.__new__(Sequencer)

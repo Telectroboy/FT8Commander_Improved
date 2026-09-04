@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from decode_normalizer import normalize_message_segments
 from v55_core import ManualOverrideController, TargetPolicy
 from v60_dxcc import DXCCBandMemory
 from v60_txdf import TxDFEngine
@@ -1810,7 +1811,7 @@ def install_v60_runtime(Sequencer, QSOState, log=None):
         and not getattr(packet, 'LowConfidence', False)
         and not getattr(packet, 'OffAir', False)):
       engaged_foreign = None
-      for segment in (part.strip() for part in str(getattr(packet, 'Message', '')).split(';')):
+      for segment in normalize_message_segments(getattr(packet, 'Message', '')):
         try:
           kind, match = self.parse_segment(segment)
         except Exception:

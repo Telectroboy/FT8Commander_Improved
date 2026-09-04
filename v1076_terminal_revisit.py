@@ -38,6 +38,8 @@ import logging
 import time
 from typing import Any, Iterable
 
+from decode_normalizer import normalize_message_segments
+
 LOG = logging.getLogger(__name__)
 MARKER = "FT8Commander V10.7.6 terminal-repeat + mandatory-revisit"
 TERMINAL_GRACE = 22.0
@@ -245,7 +247,7 @@ def _terminal_from_packet(obj: Any, packet: Any, expected_call: str):
     message to us.
     """
     message = str(getattr(packet, "Message", "") or "")
-    for segment in (part.strip() for part in message.split(";")):
+    for segment in normalize_message_segments(message):
         try:
             kind, match = obj.parse_segment(segment)
         except Exception:

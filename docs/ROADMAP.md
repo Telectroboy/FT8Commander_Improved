@@ -20,8 +20,8 @@ moteur adaptatif. Aucun élément futur n'est présenté comme déjà implément
 
 ## P1 — Corriger les règles déterministes
 
-- [ ] Introduire `DecodeNormalizer`.
-- [ ] Prendre en charge les messages MSHV Multi-Answer, dont
+- [x] Introduire le premier `DecodeNormalizer` conservateur.
+- [x] Prendre en charge les messages MSHV Multi-Answer, dont
   `F4EGM RR73; JA1MLV <CN8NS> -08`.
 - [ ] Séparer explicitement `ENGAGED_ACTIVE`, `TERMINAL_WATCH` et
   `TERMINAL_COMPLETE`.

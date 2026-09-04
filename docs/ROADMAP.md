@@ -14,8 +14,8 @@ moteur adaptatif. Aucun élément futur n'est présenté comme déjà implément
 - [x] Rejouer les tests avec le Python exact du service.
 - [x] Auditer la structure et les dépendances réellement importées.
 - [x] Ajouter un exemple de configuration entièrement fictif.
-- [ ] Créer un commit d'import indépendant.
-- [ ] Créer le tag annoté `v10.7.6` et la release seulement après correspondance
+- [x] Créer un commit d'import indépendant.
+- [x] Créer le tag annoté `v10.7.6` et la release seulement après correspondance
   des empreintes et des tests.
 
 ## P1 — Corriger les règles déterministes

@@ -7,21 +7,20 @@ du code source.
 
 ## Unreleased
 
-### Documentation
+Aucune modification depuis la baseline publique V10.7.6.
 
-- État des lieux de la baseline V10.7.6 avec policy V10.7.4.
-- Formalisation des invariants radio et des priorités.
-- Architecture cible FT8/FT4 et roadmap du moteur d'opportunité.
-- Politique d'exclusion des secrets, journaux, bases et configurations privées.
-- Collecteur DigiPi en lecture seule avec contrôle des empreintes V10.7.6.
-- Import du code et des 101 tests récupérés depuis la baseline DigiPi.
+## 10.7.6 - 2026-09-04
+
+### Publication de la baseline
+
+- Import du code, des plugins et des 101 tests récupérés depuis le DigiPi.
+- Vérification des quatre empreintes de référence dans un clone GitHub séparé.
+- Exécution réussie des 101 tests et des self-tests V10.7.4/V10.7.6 avec le
+  Python du service.
+- Ajout d'une configuration d'exemple entièrement fictive.
 - Neutralisation du chemin matériel CAT-2 spécifique à l'installation.
-
-### Limitation restante
-
-- L'exemple de configuration public complet reste à produire avant la release.
-
-## 10.7.6 - 2026-09-03
+- État des lieux, décisions radio, architecture et roadmap versionnés.
+- Politique d'exclusion des secrets, journaux, bases et configurations privées.
 
 ### Documenté comme validé
 

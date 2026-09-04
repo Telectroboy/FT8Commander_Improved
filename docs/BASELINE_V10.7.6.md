@@ -6,10 +6,9 @@ La version opérationnelle connue est **V10.7.6 avec la policy V10.7.4**. Les
 éléments ci-dessous sont vérifiables à partir de la sortie d'installation et du
 journal d'exploitation conservés le 3 septembre 2026.
 
-Le code source et la suite de tests correspondants ne sont pas disponibles dans
-le dépôt au moment de cet état des lieux. Il est donc impossible d'auditer la
-mise en œuvre, de relancer les 101 tests ou de reconstruire cette version depuis
-GitHub.
+Le code source, les plugins et la suite de tests ont ensuite été récupérés du
+DigiPi et contrôlés avant import public. L'état observé initialement reste
+consigné ci-dessous afin de conserver la chaîne de validation.
 
 ## Inventaire observé sur le DigiPi
 
@@ -66,17 +65,30 @@ terminal=true
 La syntaxe spéciale est également attestée dans le journal des versions MSHV :
 [README MSHV sur SourceForge](https://sourceforge.net/projects/mshv/files/README.txt/download).
 
-## Conditions avant création du tag `v10.7.6`
+## Contrôles réalisés avant l'import
 
-1. Copier les quatre fichiers portant exactement les empreintes ci-dessus et
-   la suite de tests depuis le DigiPi vers un répertoire temporaire.
-2. Exclure et contrôler les secrets, configurations privées, journaux, ADIF,
-   bases SQLite, sauvegardes et états runtime.
-3. Exécuter la suite dans l'environnement documenté.
-4. Comparer les nouvelles empreintes aux valeurs de cette page.
-5. Importer le snapshot sans réécriture fonctionnelle.
-6. Créer un commit d'import distinct, puis seulement le tag annoté `v10.7.6` et
-   la release correspondante.
+1. Les quatre fichiers portant exactement les empreintes ci-dessus ont été
+   copiés avec la suite de tests et les plugins.
+2. Les secrets, configurations privées, journaux, ADIF, bases SQLite,
+   sauvegardes et états runtime ont été exclus.
+3. Les 101 tests ont été exécutés dans l'environnement Python du service.
+4. Les self-tests V10.7.4 et V10.7.6 ont été exécutés séparément.
+5. Les nouvelles empreintes ont été comparées aux valeurs de cette page.
+6. Le snapshot a été inspecté et une valeur matérielle privée a été neutralisée
+   avant son entrée dans l'historique public.
 
-Tant que ces conditions ne sont pas remplies, `VERSION` désigne la baseline
-documentée et non une release reconstructible depuis ce dépôt.
+## Import public
+
+Le snapshot récupéré a satisfait les quatre empreintes et les 101 tests dans
+l'environnement du service. Avant import public, une valeur spécifique au
+matériel a été neutralisée dans `yaesu_cat2.py` : le chemin par défaut contenant
+le numéro de série du convertisseur USB CAT-2 a été remplacé par
+`/dev/ttyUSB1`. Aucun des quatre fichiers portant les empreintes de référence
+n'a été modifié.
+
+Le chemin stable du matériel doit être fourni par la configuration locale
+`band_hop_cat_port`, qui reste hors du dépôt.
+
+Le fichier `VERSION` trouvé sur le DigiPi contenait encore `6.0.0-dev2`. Cette
+valeur était périmée par rapport aux modules V10.7.4/V10.7.6 réellement chargés
+et aux marqueurs d'installation. Elle n'a pas remplacé le `VERSION` public.

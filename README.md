@@ -12,19 +12,16 @@ explicites, testables et indépendantes du moteur de sélection des cibles.
 
 ## État du dépôt
 
-La baseline opérationnelle documentée est **V10.7.6 avec la policy V10.7.4**.
-Elle a été validée le 3 septembre 2026 sur le DigiPi par 101 tests, un contrôle
-de démarrage du service et une observation en conditions réelles.
+La baseline opérationnelle est **V10.7.6 avec la policy V10.7.4**. Son code et
+ses tests ont été récupérés du DigiPi, les quatre empreintes de référence ont
+été confirmées et les 101 tests ainsi que les deux self-tests V10.7.x passent
+dans l'environnement Python du service.
 
-Le code correspondant n'est toutefois **pas encore présent dans ce dépôt**. Le
-dépôt ne doit donc pas être utilisé pour installer ou reconstruire V10.7.6. Les
-empreintes attendues et la limite exacte de cette validation sont consignées
-dans [docs/BASELINE_V10.7.6.md](docs/BASELINE_V10.7.6.md).
-
-La prochaine étape obligatoire est d'importer depuis le DigiPi le snapshot qui
-correspond à ces empreintes, avec ses tests, sans importer de configuration
-privée, de base SQLite, de journal radio ni de secret. Le tag `v10.7.6` et une
-release ne seront créés qu'après cette vérification.
+Une valeur matérielle spécifique au poste a été neutralisée avant l'import
+public sans modifier les quatre fichiers portant les empreintes de référence.
+Les contrôles et limites sont consignés dans
+[docs/BASELINE_V10.7.6.md](docs/BASELINE_V10.7.6.md) et
+[docs/AUDIT_V10.7.6.md](docs/AUDIT_V10.7.6.md).
 
 ## Invariants radio
 
@@ -50,6 +47,7 @@ Les définitions normatives et les points encore ouverts sont dans
 ## Documentation
 
 - [Baseline V10.7.6](docs/BASELINE_V10.7.6.md)
+- [Audit du code V10.7.6](docs/AUDIT_V10.7.6.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Décisions](docs/DECISIONS.md)
 - [Protocoles et modes](docs/PROTOCOL_MODES.md)

@@ -7,13 +7,13 @@ moteur adaptatif. Aucun élément futur n'est présenté comme déjà implément
 
 - [x] Fournir un collecteur en lecture seule qui contrôle les quatre empreintes
   avant de créer une archive de revue.
-- [ ] Exporter du DigiPi les quatre fichiers portant les SHA-256 documentés.
-- [ ] Exporter la suite exacte des 101 tests.
-- [ ] Retirer secrets, configurations privées, journaux, ADIF, bases SQLite,
+- [x] Exporter du DigiPi les quatre fichiers portant les SHA-256 documentés.
+- [x] Exporter la suite exacte des 101 tests.
+- [x] Retirer secrets, configurations privées, journaux, ADIF, bases SQLite,
   sauvegardes et états runtime.
-- [ ] Rejouer les tests avec le Python exact du service.
-- [ ] Auditer la structure et les dépendances réellement importées.
-- [ ] Ajouter un exemple de configuration entièrement fictif.
+- [x] Rejouer les tests avec le Python exact du service.
+- [x] Auditer la structure et les dépendances réellement importées.
+- [x] Ajouter un exemple de configuration entièrement fictif.
 - [ ] Créer un commit d'import indépendant.
 - [ ] Créer le tag annoté `v10.7.6` et la release seulement après correspondance
   des empreintes et des tests.

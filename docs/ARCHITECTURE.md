@@ -1,23 +1,23 @@
 # Architecture
 
-## État actuel vérifiable
+## État actuel vérifié
 
-Le dépôt public ne contient pas encore le runtime V10.7.6. L'installation
-validée sur DigiPi est composée au minimum de :
+Le runtime V10.7.6 récupéré du DigiPi est composé notamment de :
 
 - `ft8ctrl.py`, entrée principale du service ;
 - `v60_runtime.py`, couche runtime héritée ;
 - `v107_policy.py`, policy V10.7.4 de backoff proactif et QSY transactionnel ;
 - `v1076_terminal_revisit.py`, gestion terminale et mandatory revisit ;
-- une suite ayant exécuté 101 tests dans l'environnement du service.
+- 26 modules Python et 11 fichiers contenant 101 tests.
 
-Cette liste vient des marqueurs et empreintes d'installation. Les dépendances,
-les appels entre modules et la couverture des tests ne peuvent pas être audités
-avant l'import du snapshot.
+Le noyau expose `IDLE`, `ATTEMPT` et `ENGAGED`. Les runtimes V6, V10.7.4 et
+V10.7.6 sont installés successivement en remplaçant des méthodes du séquenceur.
+`TERMINAL_WATCH` est actuellement une structure auxiliaire, pas encore un état
+explicite. L'audit détaillé est dans [AUDIT_V10.7.6.md](AUDIT_V10.7.6.md).
 
-Le projet d'origine utilise Python, le protocole UDP de WSJT-X, `PyYAML`,
-`DXEntity`, `tabulate` et SQLite. Cela décrit l'amont public, pas nécessairement
-l'intégralité de la version déployée.
+Les dépendances de base déclarées sont `PyYAML`, `DXEntity` et `tabulate`.
+SQLite appartient à la bibliothèque standard Python. `paho-mqtt` est une
+dépendance optionnelle non encore déclarée pour le module PSKReporter.
 
 ## Architecture cible
 

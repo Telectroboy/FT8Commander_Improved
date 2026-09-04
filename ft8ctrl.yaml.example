@@ -1,0 +1,42 @@
+---
+# Public example only. Replace N0CALL and AA00 with local values in the private
+# ft8ctrl.yaml file. Keep that private file outside Git.
+ft8ctrl:
+  my_call: N0CALL
+  my_grid: AA00
+  my_continent: NA
+  db_name: ./runtime/ft8ctl.sql
+  logfile_name: ./runtime/ft8ctrl-debug.log
+
+  wsjt_ip: 127.0.0.1
+  wsjt_port: 2238
+  follow_frequency: false
+  retry_time: 15
+  tx_power: null
+  tx_retries: 4
+  engaged_retries: 4
+
+  call_selector:
+    - Any
+
+  # Disabled in the public example. Validate CAT and QSY locally before use.
+  band_hopping: false
+  band_hop_cat_port: /dev/ttyUSB1
+  band_hop_cat_baud: 4800
+  band_hop_cat_verify: true
+
+  # Disabled until the FTX-1 split/TXDF path is validated on the local station.
+  tx_df_enabled: false
+
+  # External intelligence is optional and advisory.
+  pskr_enabled: false
+  pskr_host: mqtt.pskreporter.info
+  pskr_port: 1883
+  dxcluster_enabled: false
+  dxcluster_host: ""
+  dxcluster_port: 7300
+
+Any:
+  min_snr: -18
+  max_snr: 3
+  lotw_users_only: false

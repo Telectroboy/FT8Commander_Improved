@@ -1,0 +1,155 @@
+import inspect
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+
+import geo
+from dbutils import create_db
+from ft8ctrl import Sequencer, V60_LOCATOR_TIMEOUT_HOTFIX
+from v60_runtime import V60_PURSUIT_WAIT_HOLD_HOTFIX
+
+
+class TestV60LocatorPursuitWaitV4(unittest.TestCase):
+    def bare_seq(self, db_path=None):
+        seq = Sequencer.__new__(Sequencer)
+        if db_path is not None:
+            seq.db_name = Path(db_path)
+        seq.origin = geo.grid2latlon('JN29')
+        seq.band = 15
+        seq.proactive_targets = {}
+        seq.v60_pursuit = {}
+        seq.v60_pursuit_max_windows = 6
+        seq.v60_pursuit_max_age = 1800.0
+        seq.v60_pursuit_lost_timeout = 90.0
+        seq.v60_pursuit_busy_hold = 90.0
+        seq.v60_qsy_intent = None
+        seq.dxe_lookup = lambda call: SimpleNamespace(
+            country='Vietnam', continent='AS', cqzone=26, ituzone=49, adif=293,
+        )
+        return seq
+
+    def test_reply_rr73_is_terminal_not_locator(self):
+        seq = Sequencer.__new__(Sequencer)
+        kind, match = seq.parse_segment('F4HIK XV9T RR73')
+        self.assertEqual(kind, 'REPLY')
+        self.assertEqual(match['call'], 'XV9T')
+        self.assertEqual(match['payload'], ['RR73'])
+        self.assertIsNone(match['grid'])
+
+    def test_cq_rr73_can_still_be_a_locator(self):
+        seq = Sequencer.__new__(Sequencer)
+        kind, match = seq.parse_segment('CQ TEST1 RR73')
+        self.assertEqual(kind, 'CQ')
+        self.assertEqual(match['grid'], 'RR73')
+
+    def test_known_locator_survives_non_grid_reply_after_db_row_is_gone(self):
+        with tempfile.TemporaryDirectory() as td:
+            db = Path(td) / 'calls.db'
+            create_db(db)
+            seq = self.bare_seq(db)
+            seq.proactive_targets['XV9T'] = {
+                'call': 'XV9T', 'band': 15, 'grid': 'OK33',
+                'distance': geo.distance(seq.origin, geo.grid2latlon('OK33')),
+            }
+            data = seq.lookup_candidate('XV9T', None, 15)
+            self.assertEqual(data['grid'], 'OK33')
+            self.assertEqual(int(data['distance']), 9772)
+
+    def test_unknown_locator_stays_unknown(self):
+        with tempfile.TemporaryDirectory() as td:
+            db = Path(td) / 'calls.db'
+            create_db(db)
+            seq = self.bare_seq(db)
+            data = seq.lookup_candidate('SPECIAL1', None, 15)
+            self.assertIsNone(data['grid'])
+            self.assertIsNone(data['distance'])
+
+    def test_rr73_regression_matches_observed_false_distance(self):
+        origin = geo.grid2latlon('JN29')
+        self.assertEqual(int(geo.distance(origin, geo.grid2latlon('RR73'))), 5326)
+        self.assertEqual(int(geo.distance(origin, geo.grid2latlon('OK33'))), 9772)
+
+    def test_busy_hold_is_active_on_same_band(self):
+        seq = self.bare_seq()
+        seq.proactive_targets['XV9T'] = {'call': 'XV9T', 'band': 15}
+        seq.v60_pursuit['XV9T'] = {
+            'started': 10.0, 'windows': 5, 'last_seen': 100.0,
+            'waiting': True, 'exhausted': False,
+            'busy_hold_started': 100.0, 'busy_hold_until': 190.0,
+            'busy_band': 15, 'busy_hold_log_at': 0.0,
+        }
+        hold = seq.v60_busy_wait_band_hold(now=130.0)
+        self.assertIsNotNone(hold)
+        call, remaining, _rec = hold
+        self.assertEqual(call, 'XV9T')
+        self.assertEqual(remaining, 60.0)
+
+    def test_busy_hold_expires_without_extension(self):
+        seq = self.bare_seq()
+        seq.proactive_targets['XV9T'] = {'call': 'XV9T', 'band': 15}
+        rec = {
+            'started': 10.0, 'windows': 5, 'last_seen': 185.0,
+            'waiting': True, 'exhausted': False,
+            'busy_hold_started': 100.0, 'busy_hold_until': 190.0,
+            'busy_band': 15, 'busy_hold_log_at': 0.0,
+        }
+        seq.v60_pursuit['XV9T'] = rec
+        # Even if last_seen moved forward because XV9T kept working others,
+        # the fixed hold deadline remains 190 and is cleared at expiry.
+        self.assertIsNone(seq.v60_busy_wait_band_hold(now=191.0))
+        self.assertEqual(rec['busy_hold_until'], 0.0)
+
+    def test_busy_hold_cannot_pin_after_max_windows(self):
+        seq = self.bare_seq()
+        seq.proactive_targets['XV9T'] = {'call': 'XV9T', 'band': 15}
+        rec = {
+            'started': 10.0, 'windows': 6, 'last_seen': 100.0,
+            'waiting': True, 'exhausted': False,
+            'busy_hold_started': 100.0, 'busy_hold_until': 190.0,
+            'busy_band': 15, 'busy_hold_log_at': 0.0,
+        }
+        seq.v60_pursuit['XV9T'] = rec
+        self.assertIsNone(seq.v60_busy_wait_band_hold(now=130.0))
+        self.assertEqual(rec['busy_hold_until'], 0.0)
+
+    def test_busy_hold_does_not_recreate_selection_starvation(self):
+        source = inspect.getsource(Sequencer.maybe_band_hop)
+        marker = "busy_hold = v60_busy_wait_band_hold(self)"
+        self.assertIn(marker, source)
+        block = source[source.index(marker):source.index("intent_state = v60_service_qsy_intent", source.index(marker))]
+        self.assertIn('return False', block)
+        self.assertNotIn('return True', block)
+        self.assertIn('same-band selection continues', block)
+
+    def test_pending_qsy_is_guarded_by_busy_hold(self):
+        source = inspect.getsource(Sequencer.check_timeouts)
+        # check_timeouts services the guarded transaction; the service itself
+        # must contain the busy-hold cancellation guard.
+        self.assertIn('v60_service_qsy_intent(self, now)', source)
+        import v60_runtime
+        runtime_source = inspect.getsource(v60_runtime.install_v60_runtime)
+        service_start = runtime_source.index('def v60_service_qsy_intent')
+        service_end = runtime_source.index('def v60_note_manual_tx_lock', service_start)
+        service = runtime_source[service_start:service_end]
+        self.assertIn('busy_hold = v60_busy_wait_band_hold(self, now)', service)
+        self.assertIn("return 'cancelled'", service)
+
+    def test_fresh_start_consumes_old_busy_hold(self):
+        source = inspect.getsource(Sequencer.start_candidate)
+        self.assertIn("rec['busy_hold_until'] = 0.0", source)
+        self.assertIn("rec['busy_band'] = None", source)
+
+    def test_listening_log_uses_real_v6_pursuit_timeout(self):
+        source = inspect.getsource(Sequencer.finish_proactive_burst)
+        self.assertIn('v60_pursuit_lost_timeout', source)
+        self.assertIn('pursuit timeout %.0fs since last heard', source)
+        self.assertNotIn('expires after %.0fs without hearing it', source)
+
+    def test_v4_markers_present(self):
+        self.assertEqual(V60_LOCATOR_TIMEOUT_HOTFIX, '2026-09-02-v4')
+        self.assertEqual(V60_PURSUIT_WAIT_HOLD_HOTFIX, '2026-09-02-v4')
+
+
+if __name__ == '__main__':
+    unittest.main()

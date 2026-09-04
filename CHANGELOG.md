@@ -14,10 +14,12 @@ du code source.
 - Architecture cible FT8/FT4 et roadmap du moteur d'opportunité.
 - Politique d'exclusion des secrets, journaux, bases et configurations privées.
 - Collecteur DigiPi en lecture seule avec contrôle des empreintes V10.7.6.
+- Import du code et des 101 tests récupérés depuis la baseline DigiPi.
+- Neutralisation du chemin matériel CAT-2 spécifique à l'installation.
 
-### Limitation
+### Limitation restante
 
-- Le snapshot source validé V10.7.6 n'est pas encore dans le dépôt.
+- L'exemple de configuration public complet reste à produire avant la release.
 
 ## 10.7.6 - 2026-09-03
 

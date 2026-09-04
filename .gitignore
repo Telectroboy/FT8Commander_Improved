@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Secrets and private configuration
+.env
+.env.*
+!.env.example
+ft8ctrl.yaml
+config.yaml
+config.yml
+secrets.yaml
+secrets.yml
+*.pem
+*.key
+credentials/
+
+# Runtime data and private radio records
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+*.adi
+*.adif
+ALL.TXT
+logs/
+runtime/
+state/
+backups/
+
+# Local transfer and installation artefacts
+*.bak
+*.backup
+*.pid
+*.sock
+*.tmp
+*.local

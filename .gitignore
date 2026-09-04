@@ -52,6 +52,7 @@ logs/
 runtime/
 state/
 backups/
+_review/
 
 # Local transfer and installation artefacts
 *.bak

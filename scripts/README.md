@@ -6,7 +6,8 @@
 l'installation et n'arrête pas le service. Il :
 
 1. vérifie les quatre empreintes SHA-256 documentées ;
-2. collecte les modules Python, les tests et les métadonnées de build autorisées ;
+2. collecte les modules Python, les plugins, les tests, les scripts et les
+   métadonnées de build autorisées ;
 3. exclut par construction configurations runtime, bases, ADIF, logs, clés et
    sauvegardes ;
 4. produit `/home/pi/ft8commander-v10.7.6-review.tar.gz` et son empreinte.

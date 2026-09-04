@@ -40,7 +40,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mkdir -p "$stage_dir/source" "$stage_dir/tests"
+mkdir -p "$stage_dir/source" "$stage_dir/tests" "$stage_dir/plugins" "$stage_dir/support"
 
 # Root Python modules are code. Configuration and runtime data use other names
 # or extensions and are intentionally not selected.
@@ -64,7 +64,20 @@ if [[ -d "$SOURCE_ROOT/tests" ]]; then
   )
 fi
 
-for metadata in requirements.txt requirements-dev.txt pyproject.toml setup.cfg pytest.ini tox.ini; do
+if [[ -d "$SOURCE_ROOT/plugins" ]]; then
+  while IFS= read -r -d '' filepath; do
+    install -m 0644 "$filepath" "$stage_dir/plugins/$(basename "$filepath")"
+  done < <(find "$SOURCE_ROOT/plugins" -maxdepth 1 -type f -name '*.py' -print0 | sort -z)
+fi
+
+while IFS= read -r -d '' filepath; do
+  install -m 0644 "$filepath" "$stage_dir/support/$(basename "$filepath")"
+done < <(find "$SOURCE_ROOT" -maxdepth 1 -type f -name '*.sh' -print0 | sort -z)
+
+for metadata in \
+  requirements.txt requirements-dev.txt pyproject.toml setup.cfg pytest.ini tox.ini \
+  .flake8 .pre-commit-config.yaml pylintrc LICENSE VERSION README.md README-V6.0.md \
+  ft8ctrl.yaml.sample; do
   if [[ -f "$SOURCE_ROOT/$metadata" && ! -L "$SOURCE_ROOT/$metadata" ]]; then
     install -m 0644 "$SOURCE_ROOT/$metadata" "$stage_dir/$metadata"
   fi
@@ -72,7 +85,7 @@ done
 
 (
   cd "$stage_dir"
-  find source tests -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+  find source tests plugins support -type f -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
 )
 
 cat > "$stage_dir/REVIEW_REQUIRED.txt" <<'EOF'

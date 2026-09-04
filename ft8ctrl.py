@@ -473,6 +473,18 @@ class Sequencer:
              '?' if data.get('distance') is None else int(data['distance']),
              self.priority_class(data))
 
+  def handle_direct_call(self, packet, match):
+    """Advance the active correspondent or retain any other direct caller."""
+    call = match['call']
+    payload = match.get('payload') or []
+    if self.current and call == self.current.get('call'):
+      # Any direct message from our selected station proves two-way copy.
+      self.mark_engaged(call, payload)
+      return
+    # This includes terminal RRR/RR73/73: a directed terminal message is still
+    # an explicit request for our side of the exchange.
+    self.queue_direct_call(packet, match)
+
   def country_is_wanted(self, call, info, snr):
     """Return True when a decoded station passes the active Country selector."""
     if not self.proactive_enabled or not self.country_selector:
@@ -755,9 +767,16 @@ class Sequencer:
   def next_direct_call(self, band):
     now = time.monotonic()
     candidates = []
+    current = self.current or {}
+    queue_is_protected = bool(
+      self.state == QSOState.ENGAGED or current.get('source') == 'direct'
+    )
     for call, data in list(self.pending_direct_calls.items()):
-      age = now - data.get('last_seen', data['queued_at'])
-      if age > self.direct_call_timeout:
+      freshness_origin = data.get(
+        'available_since', data.get('last_seen', data['queued_at'])
+      )
+      age = now - freshness_origin
+      if not queue_is_protected and age > self.direct_call_timeout:
         LOG.info('Direct call expired: %s, age %.0fs', call, age)
         del self.pending_direct_calls[call]
         continue
@@ -770,6 +789,18 @@ class Sequencer:
     if not candidates:
       return None
     return max(candidates, key=self.candidate_key)
+
+  def release_pending_direct_calls(self):
+    """Start a fresh service window for callers held behind an active QSO."""
+    if not self.pending_direct_calls:
+      return
+    now = time.monotonic()
+    for data in self.pending_direct_calls.values():
+      data['available_since'] = now
+    LOG.info(
+      'Released %d pending direct call(s) after active QSO ownership ended',
+      len(self.pending_direct_calls),
+    )
 
   # ------------------------------------------------------------------------
   # WSJT-X control
@@ -960,6 +991,12 @@ class Sequencer:
     except Exception as err:
       LOG.exception('V10.7.4 before_clear failed: %s', err)
 
+    release_direct_queue = bool(
+      self.current and (
+        self.state == QSOState.ENGAGED
+        or self.current.get('source') == 'direct'
+      )
+    )
     if self.current:
       LOG.info('State %s -> IDLE: %s (%s)', self.state.value,
                self.current.get('call'), reason)
@@ -983,6 +1020,8 @@ class Sequencer:
     self.engaged_at = 0.0
     self.engaged_rx_stage = 0
     self.engaged_tx_since_progress = 0
+    if release_direct_queue:
+      self.release_pending_direct_calls()
 
   def start_candidate(self, data, reason):
     if not data:
@@ -1505,13 +1544,10 @@ class Sequencer:
         )
 
         if to_call == self.mycall:
-          if self.current and call == self.current.get('call'):
-            # Any direct message from our selected station proves two-way copy.
-            self.mark_engaged(call, payload)
-          elif not self.is_terminal(payload):
-            # Tail-ender/direct caller. Queue now but never switch in the middle
-            # of the decode batch; our current station might answer later in it.
-            self.queue_direct_call(packet, match)
+          # Queue any caller other than the active correspondent, including a
+          # terminal message. Selection still waits until the decode batch is
+          # complete and cannot interrupt an ENGAGED QSO.
+          self.handle_direct_call(packet, match)
           continue
 
         # A station we are merely ATTEMPTING may be heard working somebody
@@ -1756,7 +1792,14 @@ class Sequencer:
         if source == 'direct':
           LOG.warning('For UDP replies to non-CQ messages in WSJT-X Improved, '
                       'enable "Hold Tx Freq".')
-          self.pending_direct_calls.pop(call, None)
+          pending = self.pending_direct_calls.get(call)
+          if pending:
+            # A failed WSReply selection is not evidence that the caller went
+            # away. Keep it queued and grant another bounded service window.
+            pending['available_since'] = now
+            pending['selection_failures'] = int(
+              pending.get('selection_failures', 0)
+            ) + 1
         if proactive:
           target = self.proactive_targets.get(call)
           if target:

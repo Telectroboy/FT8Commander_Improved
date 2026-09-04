@@ -16,6 +16,16 @@ du code source.
 - Utilisation du même normaliseur dans le séquenceur de base, les runtimes V5.5
   et V6, ainsi que la surveillance terminale V10.7.6.
 - Ajout de tests unitaires et d'un test d'intégration du parseur.
+- Conservation des appels directs en attente pendant un QSO engagé ou pendant
+  le traitement d'une file d'appels directs, sans consommer leur délai de
+  fraîcheur.
+- Ouverture d'une nouvelle fenêtre de traitement des appels en attente lorsque
+  le QSO actif libère la radio.
+- Mise en attente des messages directs terminaux `RRR`, `RR73` et `73` provenant
+  d'une station autre que le correspondant actif.
+- Conservation d'un appel direct lorsque WSJT-X n'accepte pas la première
+  sélection UDP, afin qu'un échec technique de sélection ne soit pas traité
+  comme la disparition de l'appelant.
 
 ## 10.7.6 - 2026-09-04
 

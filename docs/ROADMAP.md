@@ -25,7 +25,8 @@ moteur adaptatif. Aucun élément futur n'est présenté comme déjà implément
   `F4EGM RR73; JA1MLV <CN8NS> -08`.
 - [ ] Séparer explicitement `ENGAGED_ACTIVE`, `TERMINAL_WATCH` et
   `TERMINAL_COMPLETE`.
-- [ ] Rendre `PENDING_DIRECT` persistant sur plusieurs slots.
+- [x] Rendre `PENDING_DIRECT` persistant pendant un QSO engagé et pendant le
+  traitement de la file directe, puis renouveler sa fenêtre à la libération.
 - [ ] Servir tous les pending directs après la fin du QSO et avant le proactif.
 - [ ] Répondre à tout vrai `DIRECT_TO_ME`, doublon `CALL+BAND` compris.
 - [ ] Bloquer `CALL+BAND` déjà travaillé uniquement dans les chemins proactifs,

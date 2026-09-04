@@ -3,11 +3,12 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 import geo
 from decode_normalizer import normalize_message_segments
 from dbutils import create_db
-from ft8ctrl import Sequencer, V60_LOCATOR_TIMEOUT_HOTFIX
+from ft8ctrl import QSOState, Sequencer, V60_LOCATOR_TIMEOUT_HOTFIX
 from v1076_terminal_revisit import _terminal_from_packet
 from v60_runtime import V60_PURSUIT_WAIT_HOLD_HOTFIX
 
@@ -73,6 +74,65 @@ class TestV60LocatorPursuitWaitV4(unittest.TestCase):
         self.assertEqual(token, 'RR73')
         self.assertEqual(data['call'], 'CN8NS')
         self.assertEqual(data['source'], 'terminal-73-retry')
+
+    def test_pending_direct_does_not_expire_behind_engaged_qso(self):
+        seq = Sequencer.__new__(Sequencer)
+        seq.band = 20
+        seq.state = QSOState.ENGAGED
+        seq.current = {'call': 'VK1AAA', 'source': 'cq'}
+        seq.direct_call_timeout = 90.0
+        seq.pending_direct_calls = {
+            'CN8NS': {
+                'call': 'CN8NS', 'band': 20, 'continent': 'AF',
+                'source': 'direct',
+                'queued_at': 10.0, 'last_seen': 10.0,
+            },
+        }
+
+        with patch('ft8ctrl.time.monotonic', return_value=1000.0):
+            direct = seq.next_direct_call(20)
+
+        self.assertEqual(direct['call'], 'CN8NS')
+        self.assertIn('CN8NS', seq.pending_direct_calls)
+
+    def test_pending_direct_gets_fresh_window_after_qso_release(self):
+        seq = Sequencer.__new__(Sequencer)
+        seq.band = 20
+        seq.state = QSOState.IDLE
+        seq.current = None
+        seq.direct_call_timeout = 90.0
+        seq.pending_direct_calls = {
+            'CN8NS': {
+                'call': 'CN8NS', 'band': 20, 'continent': 'AF',
+                'source': 'direct',
+                'queued_at': 10.0, 'last_seen': 10.0,
+            },
+        }
+
+        with patch('ft8ctrl.LOG', Mock()), \
+             patch('ft8ctrl.time.monotonic', return_value=1000.0):
+            seq.release_pending_direct_calls()
+        with patch('ft8ctrl.time.monotonic', return_value=1089.0):
+            self.assertEqual(seq.next_direct_call(20)['call'], 'CN8NS')
+        with patch('ft8ctrl.time.monotonic', return_value=1091.0):
+            self.assertIsNone(seq.next_direct_call(20))
+
+        self.assertNotIn('CN8NS', seq.pending_direct_calls)
+
+    def test_terminal_direct_from_another_station_is_queued(self):
+        seq = Sequencer.__new__(Sequencer)
+        seq.current = {'call': 'VK1AAA'}
+        seq.mark_engaged = Mock()
+        seq.queue_direct_call = Mock()
+        packet = SimpleNamespace(Message='F4EGM CN8NS RR73')
+        match = {
+            'to': 'F4EGM', 'call': 'CN8NS', 'payload': ['RR73'], 'grid': None,
+        }
+
+        seq.handle_direct_call(packet, match)
+
+        seq.queue_direct_call.assert_called_once_with(packet, match)
+        seq.mark_engaged.assert_not_called()
 
     def test_cq_rr73_can_still_be_a_locator(self):
         seq = Sequencer.__new__(Sequencer)

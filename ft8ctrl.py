@@ -32,6 +32,7 @@ from threading import Event
 import DXEntity
 
 from band_hopping import BandHopper, ProactiveDecodeGuard
+from decode_normalizer import normalize_message_segments
 from v60_runtime import install_v60_runtime
 from yaesu_cat2 import YaesuCAT2
 import geo
@@ -249,8 +250,8 @@ class Sequencer:
   def parse_segment(self, segment):
     """Parse one FT8 text segment.
 
-    Returns (kind, data) where kind is CQ, REPLY or None. Composite FT8 text
-    containing ';' is split by process_decode() and each segment is considered.
+    Returns (kind, data) where kind is CQ, REPLY or None. Composite FT8 text is
+    normalized and split by process_decode() before each segment is considered.
     """
     tokens = segment.strip().upper().split()
     if not tokens:
@@ -1445,7 +1446,7 @@ class Sequencer:
     self.band_hopper.record_decode(packet.Time, packet.SNR)
 
     parsed_any = False
-    for segment in (part.strip() for part in packet.Message.split(';')):
+    for segment in normalize_message_segments(packet.Message):
       kind, match = self.parse_segment(segment)
       if not kind:
         continue

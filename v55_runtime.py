@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from decode_normalizer import normalize_message_segments
 from v55_core import ManualOverrideController, TargetPolicy
 
 RUNTIME_MARKER = 'FT8Commander v5.5 runtime policy installed'
@@ -310,7 +311,7 @@ def install_v55_runtime(Sequencer, QSOState, log=None):
     if (valid_rx_context and getattr(packet, 'New', True)
         and not getattr(packet, 'LowConfidence', False)
         and not getattr(packet, 'OffAir', False)):
-      for segment in (part.strip() for part in str(getattr(packet, 'Message', '')).split(';')):
+      for segment in normalize_message_segments(getattr(packet, 'Message', '')):
         try:
           kind, match = self.parse_segment(segment)
         except Exception:

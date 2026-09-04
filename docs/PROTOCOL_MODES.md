@@ -57,6 +57,10 @@ Le premier segment ne doit pas être rejeté parce qu'il ne ressemble pas à un
 message conventionnel à deux indicatifs. L'indicatif émetteur entre chevrons du
 segment suivant fournit le contexte commun de cette trame spéciale.
 
+La branche de correction normalise cette forme précise avant chacun des chemins
+de décodage existants. Par prudence, elle n'infère pas d'émetteur lorsque le
+second segment ne porte pas un indicatif entre chevrons.
+
 La syntaxe `A2AA RR73; B2BB <C2CC> +05` est mentionnée par le projet MSHV dans
 son [README publié sur SourceForge](https://sourceforge.net/projects/mshv/files/README.txt/download).
 

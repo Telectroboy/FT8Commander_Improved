@@ -7,7 +7,15 @@ du code source.
 
 ## Unreleased
 
-Aucune modification depuis la baseline publique V10.7.6.
+### Corrigé
+
+- Ajout d'un normaliseur conservateur pour le format MSHV Multi-Answer
+  `F4EGM RR73; JA1MLV <CN8NS> -08`.
+- Reconstruction du premier échange en ordre reçu destinataire/émetteur
+  (`F4EGM CN8NS RR73`) avant passage au parseur existant.
+- Utilisation du même normaliseur dans le séquenceur de base, les runtimes V5.5
+  et V6, ainsi que la surveillance terminale V10.7.6.
+- Ajout de tests unitaires et d'un test d'intégration du parseur.
 
 ## 10.7.6 - 2026-09-04
 

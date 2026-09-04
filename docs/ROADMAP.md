@@ -5,6 +5,8 @@ moteur adaptatif. Aucun élément futur n'est présenté comme déjà implément
 
 ## P0 — Rendre V10.7.6 reconstructible
 
+- [x] Fournir un collecteur en lecture seule qui contrôle les quatre empreintes
+  avant de créer une archive de revue.
 - [ ] Exporter du DigiPi les quatre fichiers portant les SHA-256 documentés.
 - [ ] Exporter la suite exacte des 101 tests.
 - [ ] Retirer secrets, configurations privées, journaux, ADIF, bases SQLite,

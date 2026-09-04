@@ -55,6 +55,7 @@ Les définitions normatives et les points encore ouverts sont dans
 - [Protocoles et modes](docs/PROTOCOL_MODES.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Historique](CHANGELOG.md)
+- [Collecteur de la baseline DigiPi](scripts/README.md)
 
 ## Données exclues
 

@@ -13,6 +13,7 @@ du code source.
 - Formalisation des invariants radio et des priorités.
 - Architecture cible FT8/FT4 et roadmap du moteur d'opportunité.
 - Politique d'exclusion des secrets, journaux, bases et configurations privées.
+- Collecteur DigiPi en lecture seule avec contrôle des empreintes V10.7.6.
 
 ### Limitation
 
